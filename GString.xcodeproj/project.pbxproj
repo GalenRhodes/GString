@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		1117D5D1886FFFE82CFF1412 /* GString.docc in Resources */ = {isa = PBXBuildFile; fileRef = 1117D710C7702A1E77743759 /* GString.docc */; };
+		1117D8A258754095A6898920 /* GString.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1117D633C30624D0D3177333 /* GString.swift */; };
 		1117D95575CCA6B962CB6D20 /* GStringTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1117DF839C06D333BC6932E5 /* GStringTests.swift */; };
 		1117DCA6DE0DDBA03C8E0E8D /* GString.h in Headers */ = {isa = PBXBuildFile; fileRef = 1117D37789F4188CBBAC3240 /* GString.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		833688D12843A81200C81A36 /* GString.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 833688C62843A81200C81A36 /* GString.framework */; };
@@ -42,6 +43,7 @@
 		1117D2AD645DF24CE2D95EE9 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		1117D31BC4DAD59C3E5D2CC8 /* LICENSE */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
 		1117D37789F4188CBBAC3240 /* GString.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GString.h; sourceTree = "<group>"; };
+		1117D633C30624D0D3177333 /* GString.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GString.swift; sourceTree = "<group>"; };
 		1117D710C7702A1E77743759 /* GString.docc */ = {isa = PBXFileReference; lastKnownFileType = folder.documentationcatalog; path = GString.docc; sourceTree = "<group>"; };
 		1117D745A2A638F63B9CF6F6 /* .jazzy.yaml */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.yaml; path = .jazzy.yaml; sourceTree = "<group>"; };
 		1117DED98DC9116CB9FFAFAF /* Package.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Package.swift; sourceTree = "<group>"; };
@@ -123,6 +125,7 @@
 			children = (
 				1117D37789F4188CBBAC3240 /* GString.h */,
 				1117D710C7702A1E77743759 /* GString.docc */,
+				1117D633C30624D0D3177333 /* GString.swift */,
 			);
 			path = GString;
 			sourceTree = "<group>";
@@ -267,8 +270,8 @@
 			);
 			mainGroup = 833688BC2843A81200C81A36;
 			packageReferences = (
-				833688E02844F68B00C81A36 /* XCRemoteSwiftPackageReference "RegularExpression" */,
-				833688E32844FD1F00C81A36 /* XCRemoteSwiftPackageReference "PGDocFixer" */,
+				833688E02844F68B00C81A36 /* XCRemoteSwiftPackageReference "RegularExpression.git" */,
+				833688E32844FD1F00C81A36 /* XCRemoteSwiftPackageReference "PGDocFixer.git" */,
 			);
 			productRefGroup = 833688C72843A81200C81A36 /* Products */;
 			projectDirPath = "";
@@ -304,6 +307,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1117D8A258754095A6898920 /* GString.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -609,7 +613,7 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		833688E02844F68B00C81A36 /* XCRemoteSwiftPackageReference "RegularExpression" */ = {
+		833688E02844F68B00C81A36 /* XCRemoteSwiftPackageReference "RegularExpression.git" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/GalenRhodes/RegularExpression.git";
 			requirement = {
@@ -617,7 +621,7 @@
 				minimumVersion = 3.0.1;
 			};
 		};
-		833688E32844FD1F00C81A36 /* XCRemoteSwiftPackageReference "PGDocFixer" */ = {
+		833688E32844FD1F00C81A36 /* XCRemoteSwiftPackageReference "PGDocFixer.git" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/GalenRhodes/PGDocFixer.git";
 			requirement = {
@@ -630,12 +634,12 @@
 /* Begin XCSwiftPackageProductDependency section */
 		833688E12844F68B00C81A36 /* RegularExpression */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 833688E02844F68B00C81A36 /* XCRemoteSwiftPackageReference "RegularExpression" */;
+			package = 833688E02844F68B00C81A36 /* XCRemoteSwiftPackageReference "RegularExpression.git" */;
 			productName = RegularExpression;
 		};
 		833688F22844FD4B00C81A36 /* PGDocFixer */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 833688E32844FD1F00C81A36 /* XCRemoteSwiftPackageReference "PGDocFixer" */;
+			package = 833688E32844FD1F00C81A36 /* XCRemoteSwiftPackageReference "PGDocFixer.git" */;
 			productName = PGDocFixer;
 		};
 /* End XCSwiftPackageProductDependency section */
