@@ -29,13 +29,37 @@ extension String {
 
     public func split(pattern: String, limit: Int = 0, error: inout Error?) -> [String] {
         guard let rx = RegularExpression(pattern: pattern, error: &error) else { return [ self ] }
+        guard limit != 1 else { return [ self ] }
+
         var idx: StringIndex = startIndex
+        var arr: [String]    = []
+
         rx.forEachMatch(in: self) { (match: RegularExpression.Match?, _, stop: inout Bool) in
-            if let match = match {
-                match.
+            if let match = match, let range = match[0].range {
+                if range.lowerBound == startIndex { if !range.isEmpty { arr.append("") } }
+                else { arr.append(String(self[idx ..< range.lowerBound])) }
+
+                idx = range.upperBound
+                if limit > 1 && arr.count >= (limit - 1) {
+                    arr.append(String(self[idx...]))
+                    stop = true
+                }
             }
         }
-        return [ self ]
+
+        guard arr.count > 0 else { return [ self ] }
+        guard limit == 0 && arr.count > 1 else { return arr }
+        let j = (arr.count - 1)
+
+        for i in stride(from: j, to: 0, by: -1) {
+            guard arr[i].isEmpty else {
+                if i < j { arr.removeSubrange((i + 1)...) }
+                return arr
+            }
+        }
+
+        arr.removeSubrange(1...)
+        return arr
     }
 
     public func split(pattern: String, limit: Int = 0) -> [String] {
