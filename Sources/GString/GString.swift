@@ -36,8 +36,12 @@ extension String {
 
         rx.forEachMatch(in: self) { (match: RegularExpression.Match?, _, stop: inout Bool) in
             if let match = match, let range = match[0].range {
-                if range.lowerBound == startIndex { if !range.isEmpty { arr.append("") } }
-                else { arr.append(String(self[idx ..< range.lowerBound])) }
+                if range.lowerBound == startIndex {
+                    if !range.isEmpty { arr.append("") }
+                }
+                else {
+                    arr.append(String(self[idx ..< range.lowerBound]))
+                }
 
                 idx = range.upperBound
                 if limit > 1 && arr.count >= (limit - 1) {
@@ -47,9 +51,9 @@ extension String {
             }
         }
 
-        guard arr.count > 0 else { return [ self ] }
-        guard limit == 0 && arr.count > 1 else { return arr }
         let j = (arr.count - 1)
+        guard j >= 0 else { return [ self ] }
+        guard limit == 0 && arr.count > 1 else { return arr }
 
         for i in stride(from: j, to: 0, by: -1) {
             guard arr[i].isEmpty else {
