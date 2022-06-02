@@ -1,0 +1,40 @@
+{
+  "Typealiases/StringIndex.html": {
+    "name": "StringIndex"
+  },
+  "Typealiases/StringRange.html": {
+    "name": "StringRange"
+  },
+  "Extensions/String.html#/s:SS7GStringE7trimmedSSvp": {
+    "name": "trimmed",
+    "abstract": "<p>Shorthand for <code>trimmingCharacters(in: .whitespacesAndNewlines.union(.controlCharacters))</code>.</p>",
+    "parent_name": "String"
+  },
+  "Extensions/String.html#/s:SS7GStringE9fullRangeSnySS5IndexVGvp": {
+    "name": "fullRange",
+    "abstract": "<p>Shorthand for <code>startIndex ..&lt; endIndex</code>.</p>",
+    "parent_name": "String"
+  },
+  "Extensions/String.html#/s:SS7GStringE5split5regex5limit5errorSaySSGSS_Sis5Error_pSgztF": {
+    "name": "split(regex:limit:error:)",
+    "abstract": "<p>Splits this string around matches of the given regular expression.",
+    "parent_name": "String"
+  },
+  "Extensions/String.html#/s:SS7GStringE5split5regex5limitSaySSGSS_SitF": {
+    "name": "split(regex:limit:)",
+    "abstract": "<p>Splits this string around matches of the given regular expression.",
+    "parent_name": "String"
+  },
+  "Extensions/String.html": {
+    "name": "String",
+    "abstract": "<p>Extensions to the string structure.</p>"
+  },
+  "Extensions.html": {
+    "name": "Extensions",
+    "abstract": "<p>The following extensions are available globally.</p>"
+  },
+  "Typealiases.html": {
+    "name": "Type Aliases",
+    "abstract": "<p>The following type aliases are available globally.</p>"
+  }
+}

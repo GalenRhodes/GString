@@ -17,9 +17,9 @@
    </BuildAction>
    <LaunchAction
       useCustomWorkingDirectory = "YES"
+      customWorkingDirectory = "$(SRCROOT)"
       buildConfiguration = "Release"
-      allowLocationSimulation = "YES"
-      customWorkingDirectory = "$(SRCROOT)">
+      allowLocationSimulation = "YES">
       <BuildableProductRunnable>
          <BuildableReference
             BuildableIdentifier = "primary"
@@ -29,10 +29,6 @@
             ReferencedContainer = "container:GString.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
-      <LocationScenarioReference
-         identifier = "com.apple.dt.IDEFoundation.CurrentLocationScenarioIdentifier"
-         referenceType = "1">
-      </LocationScenarioReference>
       <CommandLineArguments>
          <CommandLineArgument
             argument = "--project"
@@ -79,5 +75,9 @@
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>
+      <LocationScenarioReference
+         identifier = "com.apple.dt.IDEFoundation.CurrentLocationScenarioIdentifier"
+         referenceType = "1">
+      </LocationScenarioReference>
    </LaunchAction>
 </Scheme>

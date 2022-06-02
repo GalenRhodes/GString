@@ -1,0 +1,10 @@
+{
+  "project": "GString",
+  "remote-host": "goober",
+  "remote-user": "${ENV:USER}",
+  "remote-path": "/var/www/html/${project}",
+  "jazzy-version": "0.14.2",
+  "paths": [
+    "Sources/${project}"
+  ]
+}

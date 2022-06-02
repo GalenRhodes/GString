@@ -11,6 +11,7 @@
 		1117D8A258754095A6898920 /* GString.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1117D633C30624D0D3177333 /* GString.swift */; };
 		1117D95575CCA6B962CB6D20 /* GStringTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1117DF839C06D333BC6932E5 /* GStringTests.swift */; };
 		1117DCA6DE0DDBA03C8E0E8D /* GString.h in Headers */ = {isa = PBXBuildFile; fileRef = 1117D37789F4188CBBAC3240 /* GString.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		1117DF84D82E437FBCD91B1B /* RegularExpression.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1117DC908456F53ABFF84DDB /* RegularExpression.swift */; };
 		833688D12843A81200C81A36 /* GString.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 833688C62843A81200C81A36 /* GString.framework */; };
 		833688E22844F68B00C81A36 /* RegularExpression in Frameworks */ = {isa = PBXBuildFile; productRef = 833688E12844F68B00C81A36 /* RegularExpression */; };
 		833688ED2844FD3E00C81A36 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 833688EC2844FD3E00C81A36 /* main.swift */; };
@@ -46,6 +47,9 @@
 		1117D633C30624D0D3177333 /* GString.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GString.swift; sourceTree = "<group>"; };
 		1117D710C7702A1E77743759 /* GString.docc */ = {isa = PBXFileReference; lastKnownFileType = folder.documentationcatalog; path = GString.docc; sourceTree = "<group>"; };
 		1117D745A2A638F63B9CF6F6 /* .jazzy.yaml */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.yaml; path = .jazzy.yaml; sourceTree = "<group>"; };
+		1117D7DB0B3C7CE6E4B34ECA /* DocFixerConfig.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = DocFixerConfig.json; sourceTree = "<group>"; };
+		1117DAA8362A2FBDE9C0BCF6 /* jazzy.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = jazzy.sh; sourceTree = "<group>"; };
+		1117DC908456F53ABFF84DDB /* RegularExpression.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RegularExpression.swift; sourceTree = "<group>"; };
 		1117DED98DC9116CB9FFAFAF /* Package.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Package.swift; sourceTree = "<group>"; };
 		1117DF839C06D333BC6932E5 /* GStringTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GStringTests.swift; sourceTree = "<group>"; };
 		1117DFF367CB0C8953FF94E2 /* .gitignore */ = {isa = PBXFileReference; lastKnownFileType = file.gitignore; path = .gitignore; sourceTree = "<group>"; };
@@ -107,6 +111,8 @@
 				1117DED98DC9116CB9FFAFAF /* Package.swift */,
 				1117D31BC4DAD59C3E5D2CC8 /* LICENSE */,
 				1117D745A2A638F63B9CF6F6 /* .jazzy.yaml */,
+				1117D7DB0B3C7CE6E4B34ECA /* DocFixerConfig.json */,
+				1117DAA8362A2FBDE9C0BCF6 /* jazzy.sh */,
 			);
 			name = "Project Files";
 			sourceTree = "<group>";
@@ -126,6 +132,7 @@
 				1117D37789F4188CBBAC3240 /* GString.h */,
 				1117D710C7702A1E77743759 /* GString.docc */,
 				1117D633C30624D0D3177333 /* GString.swift */,
+				1117DC908456F53ABFF84DDB /* RegularExpression.swift */,
 			);
 			path = GString;
 			sourceTree = "<group>";
@@ -308,6 +315,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				1117D8A258754095A6898920 /* GString.swift in Sources */,
+				1117DF84D82E437FBCD91B1B /* RegularExpression.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
