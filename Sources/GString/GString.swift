@@ -22,11 +22,45 @@ import RegularExpression
 public typealias StringIndex = String.Index
 public typealias StringRange = Range<StringIndex>
 
+/// Extensions to the string structure.
+/// 
 extension String {
 
     public var trimmed:   String { trimmingCharacters(in: .whitespacesAndNewlines.union(.controlCharacters)) }
     public var fullRange: StringRange { startIndex ..< endIndex }
 
+    /// Splits this string around matches of the given regular expression.
+    /// The array returned by this method contains each substring of this string that is terminated by another substring that matches
+    /// the given expression or is terminated by the end of the string. The substrings in the array are in the order in which they
+    /// occur in this string. If the expression does not match any part of the input then the resulting array has just one element,
+    /// namely this string.
+    ///
+    /// When there is a positive-width match at the beginning of this string then an empty leading substring is included at the
+    /// beginning of the resulting array. A zero-width match at the beginning however never produces such empty leading substring.
+    ///
+    /// The limit parameter controls the number of times the pattern is applied and therefore affects the length of the resulting
+    /// array. If the limit n is greater than zero then the pattern will be applied at most n - 1 times, the array's length will
+    /// be no greater than n, and the array's last entry will contain all input beyond the last matched delimiter. If n is non-positive
+    /// then the pattern will be applied as many times as possible and the array can have any length. If n is zero then the
+    /// pattern will be applied as many times as possible, the array can have any length, and trailing empty strings will be discarded.
+    ///
+    /// The string "boo:and:foo", for example, yields the following results with these parameters:
+    ///
+    /// | Regex | Limit | Result                        |
+    /// |:-----:|:-----:|:------------------------------|
+    /// |   :   |   2   | { "boo", "and:foo" }          |
+    /// |   :   |   5   | { "boo", "and", "foo" }       |
+    /// |   :   |  -2   | { "boo", "and", "foo" }       |
+    /// |   o   |   5   | { "b", "", ":and:f", "", "" } |
+    /// |   o   |  -2   | { "b", "", ":and:f", "", "" } |
+    /// |   o   |   0   | { "b", "", ":and:f" }         |
+    ///
+    /// - Parameters:
+    ///   - pattern:
+    ///   - limit:
+    ///   - error:
+    /// - Returns:
+    ///
     public func split(pattern: String, limit: Int = 0, error: inout Error?) -> [String] {
         guard let rx = RegularExpression(pattern: pattern, error: &error) else { return [ self ] }
         guard limit != 1 else { return [ self ] }
