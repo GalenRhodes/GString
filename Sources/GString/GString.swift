@@ -27,7 +27,7 @@ public typealias StringRange = Range<StringIndex>
 extension String {
 
     /// Shorthand for `trimmingCharacters(in: .whitespacesAndNewlines.union(.controlCharacters))`.
-    public var trimmed:   String { trimmingCharacters(in: .whitespacesAndNewlines.union(.controlCharacters)) }
+    public var trimmed: String { trimmingCharacters(in: .whitespacesAndNewlinesAndControlCharacters) }
     /// Shorthand for `startIndex ..< endIndex`.
     public var fullRange: StringRange { startIndex ..< endIndex }
 

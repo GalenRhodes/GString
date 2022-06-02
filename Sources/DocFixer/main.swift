@@ -7,14 +7,34 @@
 //
 
 import Foundation
-import PGDocFixer
+import RegularExpression
 
-DispatchQueue.main.async {
-    let mAndR: [RegexRepl] = [
-        RegexRepl(pattern: "(?<!\\w|`)(nil)(?!\\w|`)", repl: "`$1`"),
-        RegexRepl(pattern: "(?<!\\w|`)(\\w+(?:\\.\\w+)*\\([^)]*\\))(?!\\w|`)", repl: "`$1`"),
-        RegexRepl(pattern: "(?<!\\w|\\[)([Zz][Ee][Rr][Oo])(?!\\w|\\])", repl: "<code>[$1](https://en.wikipedia.org/wiki/0)</code>")
-    ]
-    exit(Int32(doDocFixer(args: CommandLine.arguments, replacements: mAndR)))
-}
+DispatchQueue.main.async { exit(documentationFixer()) }
 dispatchMain()
+
+func documentationFixer() -> Int32 {
+    let p01              = #"((?:^(?:[ \t]+///)(?:.*)(?:\r\n?|\n))+)"#
+    let fm:  FileManager = FileManager.default
+    var err: Error?      = nil
+
+    guard let rx = RegularExpression(pattern: p01, error: &err) else {
+        print("ERROR: \(err?.localizedDescription ?? "")")
+        return 1
+    }
+
+    guard let inputStream: InputStream = InputStream(fileAtPath: "DocFixerConfig.json") else {
+        print("ERROR: Config file could not be found.")
+        return 1
+    }
+
+    do {
+        let da
+    }
+    catch let e {
+    }
+
+    if let e: FileManager.DirectoryEnumerator = fm.enumerator(atPath: "") {
+    }
+
+    return 0
+}
