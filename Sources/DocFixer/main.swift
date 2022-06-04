@@ -38,27 +38,16 @@ func documentationFixer() -> Int32 {
     }
 }
 
-func unURLFilename(_ filename: String) -> String {
-    if filename.hasPrefix("file://") {
-        let idx: String.Index = filename.index(filename.startIndex, offsetBy: "file://".count)
-        return String(filename[idx ..< filename.endIndex])
-    }
-    return filename
+func unURLFilename(_ fn: String) -> String {
+    fn.hasPrefix("file://") ? String(fn[fn.index(fn.startIndex, offsetBy: "file://".count) ..< fn.endIndex]) : fn
 }
 
-func removeLastSlash(_ filename: String) -> String {
-    filename.hasSuffix("/") ? String(filename[filename.startIndex ..< filename.index(before: filename.endIndex)]) : filename
+func removeLastSlash(_ fn: String) -> String {
+    fn.hasSuffix("/") ? String(fn[fn.startIndex ..< fn.index(before: fn.endIndex)]) : fn
 }
 
-func fixFilename(filename: String) -> String {
-    if filename == "~" {
-        return unURLFilename(removeLastSlash(FileManager.default.homeDirectoryForCurrentUser.absoluteString))
-    }
-    if filename.hasPrefix("~/") {
-        let p: String = FileManager.default.homeDirectoryForCurrentUser.absoluteString
-        return "\(removeLastSlash(unURLFilename(p)))/\(filename[filename.index(after: filename.index(after: filename.startIndex)) ..< filename.endIndex])"
-    }
-    return filename
+func fixFilename(_ fn: String) -> String {
+    ((fn as NSString).expandingTildeInPath as String)
 }
 
 class DFConfig {
@@ -69,7 +58,7 @@ class DFConfig {
     let jazzyVersion: String?
     let paths:        [String]
 
-    init(dataMap: [String: Any]) throws {
+    init(dataMap: Dictionary<String, Any>) throws {
         guard let prj = dataMap["project"] as? String else { throw DocFixerError.ConfigFileError(description: "Missing project name.") }
         project = prj
         remoteHost = dataMap["remote-host"] as? String ?? "localhost"
@@ -77,11 +66,14 @@ class DFConfig {
         remotePath = dataMap["remote-path"] as? String ?? "/var/www/html/\(project)"
         jazzyVersion = dataMap["jazzy-version"] as? String
 
-        guard let a1 = dataMap["paths"] as? Array<Any> else { throw DocFixerError.ConfigFileError(description: "Missing source file path(s).") }
+        guard let a1 = dataMap["paths"] as? NSArray else { throw DocFixerError.ConfigFileError(description: "Missing source file path(s).") }
         var a2: [String] = []
         for x in a1 { if let y = x as? String { a2.append(y) } }
         guard a2.count > 0 else { throw DocFixerError.ConfigFileError(description: "Missing source file path(s).") }
         paths = a2
+
+        let rx = RegularExpression(pattern: #"\$\{([^}]+)\}"#)
+        let ar = [ project, remoteHost, remoteUser, remotePath, jazzyVersion ]
     }
 }
 
