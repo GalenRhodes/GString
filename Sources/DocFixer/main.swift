@@ -59,21 +59,35 @@ class DFConfig {
     let paths:        [String]
 
     init(dataMap: Dictionary<String, Any>) throws {
-        guard let prj = dataMap["project"] as? String else { throw DocFixerError.ConfigFileError(description: "Missing project name.") }
-        project = prj
-        remoteHost = dataMap["remote-host"] as? String ?? "localhost"
-        remoteUser = dataMap["remote-user"] as? String ?? "${ENV:USER}"
-        remotePath = dataMap["remote-path"] as? String ?? "/var/www/html/\(project)"
-        jazzyVersion = dataMap["jazzy-version"] as? String
+        guard let _project = dataMap["project"] as? String else { throw DocFixerError.ConfigFileError(description: "Missing project name.") }
+        let _remoteHost   = dataMap["remote-host"] as? String ?? "localhost"
+        let _remoteUser   = dataMap["remote-user"] as? String ?? "${ENV:USER}"
+        let _remotePath   = dataMap["remote-path"] as? String ?? "/var/www/html/\(_project)"
+        let _jazzyVersion = dataMap["jazzy-version"] as? String
 
         guard let a1 = dataMap["paths"] as? NSArray else { throw DocFixerError.ConfigFileError(description: "Missing source file path(s).") }
         var a2: [String] = []
         for x in a1 { if let y = x as? String { a2.append(y) } }
         guard a2.count > 0 else { throw DocFixerError.ConfigFileError(description: "Missing source file path(s).") }
-        paths = a2
 
         let rx = RegularExpression(pattern: #"\$\{([^}]+)\}"#)
-        let ar = [ project, remoteHost, remoteUser, remotePath, jazzyVersion ]
+        let ar = [ _project, _remoteHost, _remoteUser, _remotePath, _jazzyVersion ]
+
+        for i in (ar.startIndex ..< ar.endIndex) {
+            if let s = ar[i] {
+                var i1 = s.startIndex
+                var t  = ""
+                rx?.forEachMatch(in: s) { m, _, _ in
+                    if let m = m, let r = m[0].range {
+                        t += String(s[i1 ..< r.lowerBound])
+                        i1 = r.upperBound
+                    }
+                }
+            }
+        }
+
+        paths = a2
+        project = ar[0]!
     }
 }
 
