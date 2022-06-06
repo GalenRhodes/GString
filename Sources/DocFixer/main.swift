@@ -60,34 +60,65 @@ class DFConfig {
 
     init(dataMap: Dictionary<String, Any>) throws {
         guard let _project = dataMap["project"] as? String else { throw DocFixerError.ConfigFileError(description: "Missing project name.") }
-        let _remoteHost   = dataMap["remote-host"] as? String ?? "localhost"
-        let _remoteUser   = dataMap["remote-user"] as? String ?? "${ENV:USER}"
-        let _remotePath   = dataMap["remote-path"] as? String ?? "/var/www/html/\(_project)"
-        let _jazzyVersion = dataMap["jazzy-version"] as? String
 
-        guard let a1 = dataMap["paths"] as? NSArray else { throw DocFixerError.ConfigFileError(description: "Missing source file path(s).") }
-        var a2: [String] = []
-        for x in a1 { if let y = x as? String { a2.append(y) } }
-        guard a2.count > 0 else { throw DocFixerError.ConfigFileError(description: "Missing source file path(s).") }
+        let rx       = RegularExpression(pattern: #"\$\{([^}]+)\}"#)
+        let procInfo = ProcessInfo.processInfo
+        var ar       = [
+            _project,
+            dataMap["remote-host"] as? String ?? "localhost",
+            dataMap["remote-user"] as? String ?? "${ENV:USER}",
+            dataMap["remote-path"] as? String ?? "/var/www/html/\(_project)",
+            dataMap["jazzy-version"] as? String
+        ]
 
-        let rx = RegularExpression(pattern: #"\$\{([^}]+)\}"#)
-        let ar = [ _project, _remoteHost, _remoteUser, _remotePath, _jazzyVersion ]
+        guard let p2 = dataMap["paths"] as? Array<String> else { throw DocFixerError.ConfigFileError(description: "Missing source file path(s).") }
+        guard p2.count > 0 else { throw DocFixerError.ConfigFileError(description: "Missing source file path(s).") }
 
         for i in (ar.startIndex ..< ar.endIndex) {
             if let s = ar[i] {
                 var i1 = s.startIndex
                 var t  = ""
+
                 rx?.forEachMatch(in: s) { m, _, _ in
-                    if let m = m, let r = m[0].range {
+                    if let m = m, let r = m[0].range, let k = m[1].subString {
                         t += String(s[i1 ..< r.lowerBound])
                         i1 = r.upperBound
+
+                        switch k {
+                            case "project":              t += ((i == 0) ? String(s[r]) : ar[i]!)
+                            case "remote-host":          t += ((i == 1) ? String(s[r]) : ar[i]!)
+                            case "remote-user":          t += ((i == 2) ? String(s[r]) : ar[i]!)
+                            case "remote-path":          t += ((i == 3) ? String(s[r]) : ar[i]!)
+                            case "jazzy-version":        t += ((i == 4) ? String(s[r]) : (ar[i] ?? String(s[r])))
+                            case "ENV:USER", "username": t += procInfo.userName
+                            default:
+                                if k.hasPrefix("ENV:"), let x = k.firstIndex(of: ":") {
+                                    let y   = String(k[x...])
+                                    let env = procInfo.environment
+                                    if let ev = env[y] {
+                                        t += ev
+                                    }
+                                    else {
+                                        t += String(s[r])
+                                    }
+                                }
+                                else {
+                                    t += String(s[r])
+                                }
+                        }
                     }
                 }
+                t += String(s[i1...])
+                ar[i] = t
             }
         }
 
-        paths = a2
+        paths = p2
         project = ar[0]!
+        remoteHost = ar[1]!
+        remoteUser = ar[2]!
+        remotePath = ar[3]!
+        jazzyVersion = ar[4]
     }
 }
 
