@@ -27,9 +27,19 @@ public typealias StringRange = Range<StringIndex>
 extension String {
 
     /// Shorthand for `trimmingCharacters(in: .whitespacesAndNewlines.union(.controlCharacters))`.
-    public var trimmed: String { trimmingCharacters(in: .whitespacesAndNewlinesAndControlCharacters) }
+    public var trimmed:                   String { trimmingCharacters(in: .whitespacesAndNewlinesAndControlCharacters) }
+
     /// Shorthand for `startIndex ..< endIndex`.
-    public var fullRange: StringRange { startIndex ..< endIndex }
+    public var fullRange:                 StringRange { startIndex ..< endIndex }
+
+    /// Replicates expandingTildeInPath found in NSString.
+    public var expandingTildeInPath:      String { ((self as NSString).expandingTildeInPath as String) }
+
+    /// If this string represents a file URL (begins with "file://" then it removes that prefix.
+    public var urlAsFilename:             String { hasPrefix("file://") ? String(self[index(startIndex, offsetBy: "file://".count) ..< endIndex]) : self }
+
+    /// Returns a string with any terminating forward slash (/) removed.
+    public var removingLastPathSeparator: String { hasSuffix("/") ? String(self[startIndex ..< index(before: endIndex)]) : self }
 
     /// Splits this string around matches of the given regular expression.
     /// The array returned by this method contains each substring of this string that is terminated by another substring that matches

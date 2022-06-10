@@ -40,18 +40,6 @@ func documentationFixer() -> Int32 {
     }
 }
 
-func unURLFilename(_ fn: String) -> String {
-    fn.hasPrefix("file://") ? String(fn[fn.index(fn.startIndex, offsetBy: "file://".count) ..< fn.endIndex]) : fn
-}
-
-func removeLastSlash(_ fn: String) -> String {
-    fn.hasSuffix("/") ? String(fn[fn.startIndex ..< fn.index(before: fn.endIndex)]) : fn
-}
-
-func fixFilename(_ fn: String) -> String {
-    ((fn as NSString).expandingTildeInPath as String)
-}
-
 class DFConfig {
     let project:      String
     let remoteHost:   String
