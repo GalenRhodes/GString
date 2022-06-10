@@ -9,8 +9,7 @@
 import Foundation
 import RegularExpression
 
-DispatchQueue.main.async { exit(documentationFixer()) }
-dispatchMain()
+let BAR: String = "-------------------------------------------------------------------------------------------------------------"
 
 func documentationFixer() -> Int32 {
     do {
@@ -27,11 +26,34 @@ func documentationFixer() -> Int32 {
         guard let map = data as? Dictionary<String, Any> else { throw DocFixerError.ConfigFileError(description: "Invalid config file format.") }
         let config = try DFConfig(dataMap: map)
 
-        for path in config.paths {
+        for _path in config.paths {
+            var path = _path.expandingTildeInPath.removingLastPathSeparator.urlAsFilename
+
+            if path.hasPrefix("./") { path = "\(fm.currentDirectoryPath)\(path[path.index(after: path.startIndex)...])" }
+            else if !path.hasPrefix("/") { path = "\(fm.currentDirectoryPath)/\(path)" }
+
+            print(BAR)
+            print("    Path: \(path)")
+            print(BAR)
+
             if let e: FileManager.DirectoryEnumerator = fm.enumerator(atPath: path) {
+                while let filename = e.nextObject() as? String {
+                    if filename.hasSuffix(".swift") && !filename.hasPrefix(".") {
+                        print("Filename: \(path)/\(filename)")
+
+                        if let file = try? String(contentsOfFile: "\(path)/\(filename)", encoding: .utf8) {
+                            rx.forEachMatch(in: file) { m, _, _ in
+                                if let m = m {
+                                    print(m.subString)
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
 
+        print(BAR)
         return 0
     }
     catch let e {
@@ -134,3 +156,7 @@ enum DocFixerError: Error {
     case ConfigFileError(description: String)
     case RegexError(description: String)
 }
+
+DispatchQueue.main.async { exit(documentationFixer()) }
+dispatchMain()
+

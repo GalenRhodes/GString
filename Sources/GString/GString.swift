@@ -36,7 +36,11 @@ extension String {
     public var expandingTildeInPath:      String { ((self as NSString).expandingTildeInPath as String) }
 
     /// If this string represents a file URL (begins with "file://" then it removes that prefix.
-    public var urlAsFilename:             String { hasPrefix("file://") ? String(self[index(startIndex, offsetBy: "file://".count) ..< endIndex]) : self }
+    public var urlAsFilename:             String {
+        guard hasPrefix("file://") else { return self }
+        let s = String(self[index(startIndex, offsetBy: "file://".count) ..< endIndex])
+        return (s.removingPercentEncoding ?? s)
+    }
 
     /// Returns a string with any terminating forward slash (/) removed.
     public var removingLastPathSeparator: String { hasSuffix("/") ? String(self[startIndex ..< index(before: endIndex)]) : self }
