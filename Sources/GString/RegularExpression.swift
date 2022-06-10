@@ -90,4 +90,24 @@ extension RegularExpression {
         arr.removeSubrange(1...)
         return arr
     }
+
+    public func withMatchesReplaced(string: String, using handler: (RegularExpression.Match) throws -> String?) rethrows -> String {
+        var idx = string.startIndex
+        var out = ""
+        try forEachMatch(in: string) { match, _, _ in
+            if let match = match {
+                out += string[idx ..< match.range.lowerBound]
+                idx = match.range.upperBound
+
+                if let repl = try handler(match) {
+                    out += repl
+                }
+                else {
+                    out += match.subString
+                }
+            }
+        }
+        out += string[idx...]
+        return out
+    }
 }

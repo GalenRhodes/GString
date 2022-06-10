@@ -6,5 +6,6 @@
   "jazzy-version": "0.14.2",
   "paths": [
     "Sources/${project}"
-  ]
+  ],
+  "line-width": 132
 }

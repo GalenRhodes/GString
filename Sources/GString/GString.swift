@@ -123,4 +123,57 @@ extension String {
         var error: Error? = nil
         return split(regex: regex, limit: limit, error: &error)
     }
+
+    public typealias MacroHandler = (_ macro: String) throws -> String?
+
+    public func replacingMacrosUsing(allowNesting: Bool = true, guardForCircularReference: Bool = true, _ handler: MacroHandler) rethrows -> String {
+        var g: Set<String> = Set<String>()
+        return try replacingMacrosUsing(allowNesting: allowNesting, guardForCircularReference: guardForCircularReference, guardSet: &g, handler)
+    }
+
+    private func replacingMacrosUsing(allowNesting: Bool, guardForCircularReference: Bool, guardSet: inout Set<String>, _ handler: MacroHandler) rethrows -> String {
+        let rx:   RegularExpression = RegularExpression(pattern: #"(?<!\\)\$\{([^}]+)\}"#)!
+        let x:    String            = String(Character(Unicode.Scalar(UInt8(1))))
+        let tstr: String            = self.replacingOccurrences(of: #"\\"#, with: x)
+        var out:  String            = ""
+        var idx:  StringIndex       = startIndex
+
+        try rx.forEachMatch(in: tstr) { m, _, _ in
+            if let m = m, let macroName = m[1].subString {
+                let r = m.range
+                out += tstr[idx ..< r.lowerBound]
+                idx = r.upperBound
+
+                if allowNesting && guardForCircularReference {
+                    if guardSet.contains(macroName) {
+                        out += m.subString
+                    }
+                    else {
+                        guardSet.insert(macroName)
+                        try replaceMacro(allowNesting, guardForCircularReference, &guardSet, m, macroName, &out, handler)
+                    }
+                }
+                else {
+                    try replaceMacro(allowNesting, guardForCircularReference, &guardSet, m, macroName, &out, handler)
+                }
+            }
+        }
+
+        out += tstr[idx...]
+        return out.replacingOccurrences(of: x, with: #"\\"#)
+    }
+
+    private func replaceMacro(_ nest: Bool, _ grd: Bool, _ gs: inout Set<String>, _ m: RegularExpression.Match, _ mn: String, _ out: inout String, _ h: MacroHandler) throws {
+        if let repl = try h(mn) {
+            if nest {
+                out += try repl.replacingMacrosUsing(allowNesting: true, guardForCircularReference: grd, guardSet: &gs, h)
+            }
+            else {
+                out += repl
+            }
+        }
+        else {
+            out += m.subString
+        }
+    }
 }
