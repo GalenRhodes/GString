@@ -82,4 +82,10 @@ class DFConfig: Decodable {
         }
         paths = p
     }
+
+    class func loadConfig(configFilename: String) throws -> DFConfig {
+        let jd: JSONDecoder = JSONDecoder()
+        jd.allowsJSON5 = true
+        return try jd.decode(DFConfig.self, from: String(contentsOfFile: configFilename, encoding: .utf8).data(using: .utf8)!)
+    }
 }

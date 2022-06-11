@@ -26,6 +26,8 @@ public typealias StringRange = Range<StringIndex>
 ///
 extension String {
 
+    public typealias MacroHandler = (_ macro: String) throws -> String?
+
     /// Shorthand for `trimmingCharacters(in: .whitespacesAndNewlines.union(.controlCharacters))`.
     public var trimmed:                   String { trimmingCharacters(in: .whitespacesAndNewlinesAndControlCharacters) }
 
@@ -44,6 +46,12 @@ extension String {
 
     /// Returns a string with any terminating forward slash (/) removed.
     public var removingLastPathSeparator: String { hasSuffix("/") ? String(self[startIndex ..< index(before: endIndex)]) : self }
+    public var normalizedFilename:        String { normalizedFilename(inPath: FileManager.default.currentDirectoryPath) }
+    public var absolutePath:              String { absolutePath(parent: FileManager.default.currentDirectoryPath) }
+
+    public func normalizedFilename(inPath: String) -> String { expandingTildeInPath.removingLastPathSeparator.urlAsFilename.absolutePath(parent: inPath) }
+
+    public func absolutePath(parent: String) -> String { hasPrefix("./") ? "\(parent)\(self[index(after: startIndex)...])" : hasPrefix("/") || hasPrefix("~") ? self : "\(parent)/\(self)" }
 
     /// Splits this string around matches of the given regular expression.
     /// The array returned by this method contains each substring of this string that is terminated by another substring that matches
@@ -124,13 +132,54 @@ extension String {
         return split(regex: regex, limit: limit, error: &error)
     }
 
-    public typealias MacroHandler = (_ macro: String) throws -> String?
-
     public func replacingMacrosUsing(allowNesting: Bool = true, guardForCircularReference: Bool = true, _ handler: MacroHandler) rethrows -> String {
         var g: Set<String> = Set<String>()
         return try replacingMacrosUsing(allowNesting: allowNesting, guardForCircularReference: guardForCircularReference, guardSet: &g, handler)
     }
 
+    /// Sample code.
+    ///
+    /// ```swift
+    ///     private func replacingMacrosUsing(allowNesting: Bool, guardForCircularReference: Bool, guardSet: inout Set<String>, _ handler: MacroHandler) rethrows -> String {
+    ///        let rx:   RegularExpression = RegularExpression(pattern: #"(?<!\\)\$\{([^}]+)\}"#)!
+    ///        let x:    String            = String(Character(Unicode.Scalar(UInt8(1))))
+    ///        let tstr: String            = self.replacingOccurrences(of: #"\\"#, with: x)
+    ///        var out:  String            = ""
+    ///        var idx:  StringIndex       = startIndex
+    ///
+    ///        try rx.forEachMatch(in: tstr) { m, _, _ in
+    ///            if let m = m, let macroName = m[1].subString {
+    ///                let r = m.range
+    ///                out += tstr[idx ..< r.lowerBound]
+    ///                idx = r.upperBound
+    ///
+    ///                if allowNesting && guardForCircularReference {
+    ///                    if guardSet.contains(macroName) {
+    ///                        out += m.subString
+    ///                    }
+    ///                    else {
+    ///                        guardSet.insert(macroName)
+    ///                        try replaceMacro(allowNesting, guardForCircularReference, &guardSet, m, macroName, &out, handler)
+    ///                    }
+    ///                }
+    ///                else {
+    ///                    try replaceMacro(allowNesting, guardForCircularReference, &guardSet, m, macroName, &out, handler)
+    ///                }
+    ///            }
+    ///        }
+    ///
+    ///        out += tstr[idx...]
+    ///        return out.replacingOccurrences(of: x, with: #"\\"#)
+    ///    }
+    /// ```
+    ///
+    /// - Parameters:
+    ///   - allowNesting:
+    ///   - guardForCircularReference:
+    ///   - guardSet:
+    ///   - handler:
+    /// - Returns:
+    /// - Throws:
     private func replacingMacrosUsing(allowNesting: Bool, guardForCircularReference: Bool, guardSet: inout Set<String>, _ handler: MacroHandler) rethrows -> String {
         let rx:   RegularExpression = RegularExpression(pattern: #"(?<!\\)\$\{([^}]+)\}"#)!
         let x:    String            = String(Character(Unicode.Scalar(UInt8(1))))
@@ -164,16 +213,7 @@ extension String {
     }
 
     private func replaceMacro(_ nest: Bool, _ grd: Bool, _ gs: inout Set<String>, _ m: RegularExpression.Match, _ mn: String, _ out: inout String, _ h: MacroHandler) throws {
-        if let repl = try h(mn) {
-            if nest {
-                out += try repl.replacingMacrosUsing(allowNesting: true, guardForCircularReference: grd, guardSet: &gs, h)
-            }
-            else {
-                out += repl
-            }
-        }
-        else {
-            out += m.subString
-        }
+        if let repl = try h(mn) { out += nest ? try repl.replacingMacrosUsing(allowNesting: true, guardForCircularReference: grd, guardSet: &gs, h) : repl }
+        else { out += m.subString }
     }
 }

@@ -13,50 +13,51 @@ let BAR: String = "-------------------------------------------------------------
 
 func documentationFixer() -> Int32 {
     do {
-        let p01              = #"((?:^(?:[ \t]+///)(?:.*)(?:\r\n?|\n))+)"#
-        let p02              = #"^[ \t]*/// ?"#
-        let p03              = #"(\r\n?|\n)"#
-        let p04              = p03 + p03
-        let fm:  FileManager = FileManager.default
-        var err: Error?      = nil
-        let jd:  JSONDecoder = JSONDecoder()
+        let p01:                String            = "[ \\t]"                    // Single space or tab
+        let p02:                String            = "(\\r\\n?|\\n)"             // Single line terminator
+        let p03:                String            = "^(?:\(p01)*///)"           // Doc comment block prefix
+        let p04:                String            = "((?:\(p03)(?:.*)\(p02))+)" // Doc comment block
+        let p05:                String            = "(\(p03))\(p01)?"           // Line comment prefix followed by an optional single space
+        let p06:                String            = "(?:\(p02)\(p02)+)"         // Two or more empty lines
+        let p07:                String            = "^(\\|.+?\\|\(p02))+"
+        let p08:                String            = "^```(.+?)\(p02)(.*?)\(p02)```(($)|\(p02))"
+        let p09:                String            = "^\(p01)*\\-"
+        let configFilename:     String            = "DocFixerConfig.json"
+        let rxDocCommentBlock:  RegularExpression = RegularExpression(pattern: p04, options: .anchorsMatchLines)!
+        let rxDocCommentPrefix: RegularExpression = RegularExpression(pattern: p05, options: .anchorsMatchLines)!
+        let rxLineTerminator:   RegularExpression = RegularExpression(pattern: p02, options: .anchorsMatchLines)!
+        let rxBlankLines:       RegularExpression = RegularExpression(pattern: p06, options: .anchorsMatchLines)!
+        let rxTableBlock:       RegularExpression = RegularExpression(pattern: p07)!
+        let rxCodeBlock:        RegularExpression = RegularExpression(pattern: p08, options: [ .anchorsMatchLines, .dotMatchesLineSeparators ])!
+        let fm:                 FileManager       = FileManager.default
+        let config:             DFConfig          = try DFConfig.loadConfig(configFilename: configFilename)
 
-        jd.allowsJSON5 = true
-
-        let data:   Data     = try String(contentsOfFile: "DocFixerConfig.json", encoding: .utf8).data(using: .utf8)!
-        let config: DFConfig = try jd.decode(DFConfig.self, from: data)
-
-        guard let rx1 = RegularExpression(pattern: p01, options: .anchorsMatchLines, error: &err) else { throw DocFixerError.RegexError(description: err?.localizedDescription ?? "Bad REGEX.") }
-        guard let rx2 = RegularExpression(pattern: p02, options: .anchorsMatchLines, error: &err) else { throw DocFixerError.RegexError(description: err?.localizedDescription ?? "Bad REGEX.") }
-        guard let rx3 = RegularExpression(pattern: p03, options: .anchorsMatchLines, error: &err) else { throw DocFixerError.RegexError(description: err?.localizedDescription ?? "Bad REGEX.") }
-        guard let rx4 = RegularExpression(pattern: p04, options: .anchorsMatchLines, error: &err) else { throw DocFixerError.RegexError(description: err?.localizedDescription ?? "Bad REGEX.") }
-
-        for _path in config.paths {
-            var path = _path.expandingTildeInPath.removingLastPathSeparator.urlAsFilename
-
-            if path.hasPrefix("./") { path = "\(fm.currentDirectoryPath)\(path[path.index(after: path.startIndex)...])" }
-            else if !path.hasPrefix("/") { path = "\(fm.currentDirectoryPath)/\(path)" }
+        for _p in config.paths {
+            let path = _p.normalizedFilename
 
             print(BAR)
             print("    Path: \(path)")
-            print(BAR)
 
             if let e: FileManager.DirectoryEnumerator = fm.enumerator(atPath: path) {
                 while let filename = e.nextObject() as? String {
                     if filename.hasSuffix(".swift") && !filename.hasPrefix(".") {
-                        let swiftFilename = "\(path)/\(filename)"
+                        let swiftFilename = filename.normalizedFilename(inPath: path)
 
+                        print(BAR)
                         print("Filename: \(swiftFilename)")
+                        print(BAR)
 
                         if let file = try? String(contentsOfFile: swiftFilename, encoding: .utf8) {
-                            let output = rx1.withMatchesReplaced(string: file) { match in
-                                let paragraphs = rx4.split(string: rx2.withMatchesReplaced(string: match.subString.trimmed) { _ in "" })
+                            let output = rxDocCommentBlock.withMatchesReplaced(string: file) { match in
+                                let paragraphs = rxBlankLines.split(string: rxDocCommentPrefix.withMatchesReplaced(string: match.subString.trimmed) { _ in "" })
 
                                 for paragraph in paragraphs {
-                                    let s = rx3.withMatchesReplaced(string: paragraph) { _ in " " }
+                                    let s = paragraph.hasPrefix("|") ? paragraph : rxLineTerminator.withMatchesReplaced(string: paragraph) { _ in " " }
+                                    print("--")
                                     print(s)
                                 }
 
+                                print("<--->")
                                 return match.subString
                             }
                         }
