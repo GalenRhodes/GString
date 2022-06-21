@@ -11,74 +11,56 @@ import RegularExpression
 
 let BAR: String = "-------------------------------------------------------------------------------------------------------------"
 
-private func foo1(docBlock: String, rxLineTerminator: RegularExpression) -> [String] {
-    let lines                = rxLineTerminator.split(string: docBlock)
-    let y                    = lines.count
-    var x                    = y
-    var paragraphs: [String] = []
+prefix operator ++
+postfix operator ++
+prefix operator --
+postfix operator --
 
-    while x < y {
-        let line = lines[x]
-        var para = ""
-        x += 1
-
-        if line.trimmed.isEmpty {
-            if !para.isEmpty {
-                paragraphs.append(para)
-                para = ""
-            }
-            while x < y && lines[x].trimmed.isEmpty { x += 1 }
-        }
-        else if line.trimmed.hasPrefix("```") {
-            if !para.isEmpty { paragraphs.append(para) }
-            para = line.trimmed
-            while x < y && lines[x].trimmed != "```" {
-                para += "\n\(lines[x])"
-                x += 1
-            }
-            paragraphs.append("\(para)\n```")
-            para = ""
-            if x < y { x += 1 }
-        }
-        else if line.trimmed.hasPrefix("|") {
-            if !para.isEmpty { paragraphs.append(line) }
-            para = line
-            while x < y && lines[x].trimmed.hasPrefix("|") {
-                para += "\n\(lines[x])"
-                x += 1
-            }
-            paragraphs.append(para)
-            para = ""
-        }
-        else {
-            para += " \(line.trimmed)"
-        }
-    }
-
-    return paragraphs
+@discardableResult public prefix func ++ <T: FixedWidthInteger>(x: inout T) -> T {
+    x = (x &+ 1)
+    return x
 }
 
-func documentationFixer() -> Int32 {
-    do {
-        let p01:                String            = "[ \\t]"                    // Single space or tab
-        let p02:                String            = "(\\r\\n?|\\n)"             // Single line terminator
-        let p03:                String            = "^(?:\(p01)*///)"           // Doc comment block prefix
-        let p04:                String            = "((?:\(p03)(?:.*)\(p02))+)" // Doc comment block
-        let p05:                String            = "(\(p03))\(p01)?"           // Line comment prefix followed by an optional single space
-        let p06:                String            = "(?:\(p02)\(p02)+)"         // Two or more empty lines
-        let p07:                String            = "^(\\|.+?\\|\(p02))+"
-        let p08:                String            = "(?sm)^```.+?^```(\\r\\n?|\\n)"
-        let p09:                String            = "^\(p01)*\\-"
-        let configFilename:     String            = "DocFixerConfig.json"
-        let rxDocCommentBlock:  RegularExpression = RegularExpression(pattern: p04, options: .anchorsMatchLines)!
-        let rxDocCommentPrefix: RegularExpression = RegularExpression(pattern: p05, options: .anchorsMatchLines)!
-        let rxLineTerminator:   RegularExpression = RegularExpression(pattern: p02, options: .anchorsMatchLines)!
-        let rxBlankLines:       RegularExpression = RegularExpression(pattern: p06, options: .anchorsMatchLines)!
-        let rxTableBlock:       RegularExpression = RegularExpression(pattern: p07)!
-        let rxCodeBlock:        RegularExpression = RegularExpression(pattern: p08, options: [ .anchorsMatchLines, .dotMatchesLineSeparators ])!
-        let fm:                 FileManager       = FileManager.default
-        let config:             DFConfig          = try DFConfig.loadConfig(configFilename: configFilename)
+@discardableResult public postfix func ++ <T: FixedWidthInteger>(x: inout T) -> T {
+    let _x = x
+    x = (x &+ 1)
+    return _x
+}
 
+@discardableResult public prefix func -- <T: FixedWidthInteger>(x: inout T) -> T {
+    x = (x &- 1)
+    return x
+}
+
+@discardableResult public postfix func -- <T: FixedWidthInteger>(x: inout T) -> T {
+    let _x = x
+    x = (x &- 1)
+    return _x
+}
+
+class DocFixer {
+    lazy var p01:                String            = "[ \\t]"                    // Single space or tab
+    lazy var p02:                String            = "(\\r\\n?|\\n)"             // Single line terminator
+    lazy var p03:                String            = "^(?:\(p01)*///)"           // Doc comment block prefix
+    lazy var p04:                String            = "((?:\(p03)(?:.*)\(p02))+)" // Doc comment block
+    lazy var p05:                String            = "(\(p03))\(p01)?"           // Line comment prefix followed by an optional single space
+    lazy var p06:                String            = "(?:\(p02)\(p02)+)"         // Two or more empty lines
+    lazy var p07:                String            = "^(\\|.+?\\|\(p02))+"
+    lazy var p08:                String            = "(?sm)^```.+?^```(\\r\\n?|\\n)"
+    lazy var p09:                String            = "^\(p01)*\\-"
+    lazy var rxDocCommentBlock:  RegularExpression = RegularExpression(pattern: p04, options: .anchorsMatchLines)!
+    lazy var rxDocCommentPrefix: RegularExpression = RegularExpression(pattern: p05, options: .anchorsMatchLines)!
+    lazy var rxLineTerminator:   RegularExpression = RegularExpression(pattern: p02, options: .anchorsMatchLines)!
+    lazy var rxBlankLines:       RegularExpression = RegularExpression(pattern: p06, options: .anchorsMatchLines)!
+    lazy var rxTableBlock:       RegularExpression = RegularExpression(pattern: p07)!
+    lazy var rxCodeBlock:        RegularExpression = RegularExpression(pattern: p08, options: [ .anchorsMatchLines, .dotMatchesLineSeparators ])!
+    lazy var fm:                 FileManager       = FileManager.default
+
+    let configFilename: String = "DocFixerConfig.json"
+    let config:         DFConfig
+
+    init() throws {
+        config = try DFConfig.loadConfig(configFilename: configFilename)
         print("p01: \(p01)")
         print("p02: \(p02)")
         print("p03: \(p03)")
@@ -88,7 +70,9 @@ func documentationFixer() -> Int32 {
         print("p07: \(p07)")
         print("p08: \(p08)")
         print("p09: \(p09)")
+    }
 
+    func documentationFixer() -> Int32 {
         for _p in config.paths {
             let path = _p.normalizedFilename
 
@@ -106,8 +90,9 @@ func documentationFixer() -> Int32 {
 
                         if let file = try? String(contentsOfFile: swiftFilename, encoding: .utf8) {
                             let output = rxDocCommentBlock.withMatchesReplaced(string: file) { match in
-                                let docBlock = rxDocCommentPrefix.withMatchesReplaced(string: match.subString.trimmed) { _ in "" }
-                                let paragraphs: [String] = foo1(docBlock: docBlock, rxLineTerminator: rxLineTerminator)
+                                let str:        String   = match.subString.trimmed
+                                let docBlock:   String   = removeDocBlockPrefix(rxDocCommentPrefix, str)
+                                let paragraphs: [String] = getParagraphs(docBlock, rxLineTerminator)
 
                                 for para in paragraphs {
                                     print(para)
@@ -129,17 +114,91 @@ func documentationFixer() -> Int32 {
         print(BAR)
         return 0
     }
-    catch let e {
-        print("ERROR: \(e.localizedDescription)")
-        return 1
+
+    private func getParagraphs(_ docBlock: String, _ rxLineTerminator: RegularExpression) -> [String] {
+        let lines                = rxLineTerminator.split(string: docBlock)
+        let y                    = lines.count
+        var x                    = 0
+        var paragraphs: [String] = []
+        var para                 = ""
+
+        while x < y {
+            let line        = lines[x++]
+            let lineTrimmed = line.trimmed
+
+            if lineTrimmed.isEmpty {
+                foo2(&paragraphs, &para)
+                while x < y && lines[x].trimmed.isEmpty { x += 1 }
+            }
+            else if lineTrimmed.hasPrefix("```") {
+                foo2(&paragraphs, &para)
+                para = lineTrimmed
+                while x < y {
+                    let l = lines[x]
+                    guard l.trimmed != "```" else { break }
+                    para += "\n\(l)"
+                    x += 1
+                }
+                para += "\n```"
+                foo2(&paragraphs, &para)
+            }
+            else if lineTrimmed.hasPrefix("|") {
+                foo2(&paragraphs, &para)
+                para = lineTrimmed
+                while x < y {
+                    let l = lines[x].trimmed
+                    guard l.hasPrefix("|") else { break }
+                    para += "\n\(l)"
+                    x += 1
+                }
+                foo2(&paragraphs, &para)
+            }
+            else if lineTrimmed.hasPrefix("-") {
+                foo2(&paragraphs, &para)
+                para = line
+                while x < y {
+                    let l = lines[x].trimmed
+                    guard !l.hasPrefix("-") else { break }
+                    para += " \(l)"
+                    x += 1
+                }
+                foo2(&paragraphs, &para)
+            }
+            else {
+                para += " \(lineTrimmed)"
+            }
+        }
+
+        foo2(&paragraphs, &para)
+        return paragraphs
+    }
+
+    private func foo2(_ paragraphs: inout [String], _ para: inout String) {
+        if !para.isEmpty {
+            paragraphs.append(para)
+            para = ""
+        }
+    }
+
+    private func removeDocBlockPrefix(_ rxDocCommentPrefix: RegularExpression, _ str: String) -> String {
+        let docBlock: String = rxDocCommentPrefix.withMatchesReplaced(string: str) { _ in "" }
+        return docBlock
+    }
+
+    enum DocFixerError: Error {
+        case ConfigFileError(description: String)
+        case RegexError(description: String)
     }
 }
 
-enum DocFixerError: Error {
-    case ConfigFileError(description: String)
-    case RegexError(description: String)
+DispatchQueue.main.async {
+    do {
+        exit(try DocFixer().documentationFixer())
+    }
+    catch let e {
+        print("ERROR: \(e.localizedDescription)")
+        exit(1)
+    }
 }
-
-DispatchQueue.main.async { exit(documentationFixer()) }
 dispatchMain()
 
