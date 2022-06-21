@@ -49,6 +49,63 @@ extension String {
     public var normalizedFilename:        String { normalizedFilename(inPath: FileManager.default.currentDirectoryPath) }
     public var absolutePath:              String { absolutePath(parent: FileManager.default.currentDirectoryPath) }
 
+    /// Return true if this string is prefixed with any of the given prefixes. This method is the same as calling
+    /// `hasPrefix()` with each of the given prefixes until one of them returns true.
+    ///
+    /// - Parameter prefixes: The list of prefixes to test.
+    /// - Returns: true if this string is prefixed with any of the given prefixes or false if none of them hits.
+    ///
+    public func hasAnyPrefix(_ prefixes: String...) -> Bool {
+        for p in prefixes {
+            if hasPrefix(p) { return true }
+        }
+        return false
+    }
+
+    public func wrapTo(lineWidth: Int, firstIndent: Int = 0, indent: Int = 0, tabs: Int = 4, separator: String = "\n") -> String {
+        let m = min(firstIndent, indent)
+        guard m == 0 else { return wrapTo(lineWidth: lineWidth, firstIndent: (firstIndent - m), indent: (indent - m), tabs: 4, separator: separator) }
+
+        let rx          = RegularExpression(pattern: #"(\r\n?|\n)"#)!
+        var out: String = ""
+        var x           = startIndex
+
+        rx.forEachMatch(in: self) { match, _, _ in
+            if let match = match {
+                let str = String._wrapTo(String(self[x ..< match.range.lowerBound]), lineWidth, firstIndent, indent, 4, separator)
+                x = match.range.upperBound
+                out = ((out == "") ? str : "\(out)\(separator)\(str)")
+            }
+        }
+
+        let str = String._wrapTo(String(self[x...]), lineWidth, firstIndent, indent, tabs, separator)
+        out = ((out == "") ? str : "\(out)\(separator)\(str)")
+        return out
+    }
+
+    private static func _wrapTo(_ str: String, _ lineWidth: Int, _ firstIndent: Int, _ indent: Int, _ tabs: Int, _ separator: String) -> String {
+        var out: String = ""
+        var work: String = _fill(" ", firstIndent) + RegularExpression(pattern: "\\t")!.withMatchesReplaced(string: str) { _ in _fill(" ", tabs) }
+
+        while work != "" {
+            if work.count <= lineWidth {
+                out += "\(separator)\(work)"
+                break
+            }
+            var index = work.startIndex
+            for i in (0 ..< lineWidth) {
+            }
+        }
+
+        return out
+    }
+
+    private static func _fill(_ ch: Character, _ count: Int) -> String {
+        var out: String = ""
+        for _ in (0 ..< count) { out.append(ch) }
+        return out
+    }
+
     public func normalizedFilename(inPath: String) -> String { expandingTildeInPath.removingLastPathSeparator.urlAsFilename.absolutePath(parent: inPath) }
 
     public func absolutePath(parent: String) -> String { hasPrefix("./") ? "\(parent)\(self[index(after: startIndex)...])" : hasPrefix("/") || hasPrefix("~") ? self : "\(parent)/\(self)" }
@@ -62,7 +119,7 @@ extension String {
     /// When there is a positive-width match at the beginning of this string then an empty leading substring is included at the
     /// beginning of the resulting array. A zero-width match at the beginning however never produces such empty leading substring.
     ///
-    /// The limit parameter controls the number of times the pattern is applied and therefore affects the length of the resulting
+    /// The limit parameter controls the number of times the pattern is applied and therefore affects the length of the resultinl
     /// array. If the limit n is greater than zero then the pattern will be applied at most n - 1 times, the array's length will
     /// be no greater than n, and the array's last entry will contain all input beyond the last matched delimiter. If n is non-positive
     /// then the pattern will be applied as many times as possible and the array can have any length. If n is zero then the

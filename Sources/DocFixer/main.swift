@@ -9,35 +9,6 @@
 import Foundation
 import RegularExpression
 
-let BAR: String = "-------------------------------------------------------------------------------------------------------------"
-
-prefix operator ++
-postfix operator ++
-prefix operator --
-postfix operator --
-
-@discardableResult public prefix func ++ <T: FixedWidthInteger>(x: inout T) -> T {
-    x = (x &+ 1)
-    return x
-}
-
-@discardableResult public postfix func ++ <T: FixedWidthInteger>(x: inout T) -> T {
-    let _x = x
-    x = (x &+ 1)
-    return _x
-}
-
-@discardableResult public prefix func -- <T: FixedWidthInteger>(x: inout T) -> T {
-    x = (x &- 1)
-    return x
-}
-
-@discardableResult public postfix func -- <T: FixedWidthInteger>(x: inout T) -> T {
-    let _x = x
-    x = (x &- 1)
-    return _x
-}
-
 class DocFixer {
     lazy var p01:                String            = "[ \\t]"                    // Single space or tab
     lazy var p02:                String            = "(\\r\\n?|\\n)"             // Single line terminator
@@ -56,6 +27,7 @@ class DocFixer {
     lazy var rxCodeBlock:        RegularExpression = RegularExpression(pattern: p08, options: [ .anchorsMatchLines, .dotMatchesLineSeparators ])!
     lazy var fm:                 FileManager       = FileManager.default
 
+    let BAR:            String = "-------------------------------------------------------------------------------------------------------------"
     let configFilename: String = "DocFixerConfig.json"
     let config:         DFConfig
 
@@ -90,17 +62,19 @@ class DocFixer {
 
                         if let file = try? String(contentsOfFile: swiftFilename, encoding: .utf8) {
                             let output = rxDocCommentBlock.withMatchesReplaced(string: file) { match in
-                                let str:        String   = match.subString.trimmed
-                                let docBlock:   String   = removeDocBlockPrefix(rxDocCommentPrefix, str)
-                                let paragraphs: [String] = getParagraphs(docBlock, rxLineTerminator)
+                                let paras: [String] = getParagraphs(removeDocBlockPrefix(rxDocCommentPrefix, match.subString.trimmed), rxLineTerminator)
+                                var out:   String   = ""
 
-                                for para in paragraphs {
-                                    print(para)
-                                    print("---")
+                                for p in paras {
+                                    if p.trimmed.hasAnyPrefix("|", "```") {
+                                        out = ((out == "") ? p : (out + "\n\(p)"))
+                                    }
+                                    else {
+                                        out = ((out == "") ? p.wrapTo(lineWidth: config.lineWidth, tabs: 4) : ("\(out)\n\(p.wrapTo(lineWidth: config.lineWidth, tabs: 4))"))
+                                    }
                                 }
 
-                                print("<--->")
-                                return match.subString
+                                return out
                             }
                         }
                         else {
@@ -123,15 +97,17 @@ class DocFixer {
         var para                 = ""
 
         while x < y {
-            let line        = lines[x++]
+            let line        = lines[x]
             let lineTrimmed = line.trimmed
 
+            x += 1
+
             if lineTrimmed.isEmpty {
-                foo2(&paragraphs, &para)
+                addParagraph(&paragraphs, &para)
                 while x < y && lines[x].trimmed.isEmpty { x += 1 }
             }
             else if lineTrimmed.hasPrefix("```") {
-                foo2(&paragraphs, &para)
+                addParagraph(&paragraphs, &para)
                 para = lineTrimmed
                 while x < y {
                     let l = lines[x]
@@ -140,10 +116,10 @@ class DocFixer {
                     x += 1
                 }
                 para += "\n```"
-                foo2(&paragraphs, &para)
+                addParagraph(&paragraphs, &para)
             }
             else if lineTrimmed.hasPrefix("|") {
-                foo2(&paragraphs, &para)
+                addParagraph(&paragraphs, &para)
                 para = lineTrimmed
                 while x < y {
                     let l = lines[x].trimmed
@@ -151,10 +127,10 @@ class DocFixer {
                     para += "\n\(l)"
                     x += 1
                 }
-                foo2(&paragraphs, &para)
+                addParagraph(&paragraphs, &para)
             }
             else if lineTrimmed.hasPrefix("-") {
-                foo2(&paragraphs, &para)
+                addParagraph(&paragraphs, &para)
                 para = line
                 while x < y {
                     let l = lines[x].trimmed
@@ -162,18 +138,18 @@ class DocFixer {
                     para += " \(l)"
                     x += 1
                 }
-                foo2(&paragraphs, &para)
+                addParagraph(&paragraphs, &para)
             }
             else {
                 para += " \(lineTrimmed)"
             }
         }
 
-        foo2(&paragraphs, &para)
+        addParagraph(&paragraphs, &para)
         return paragraphs
     }
 
-    private func foo2(_ paragraphs: inout [String], _ para: inout String) {
+    private func addParagraph(_ paragraphs: inout [String], _ para: inout String) {
         if !para.isEmpty {
             paragraphs.append(para)
             para = ""
@@ -181,8 +157,7 @@ class DocFixer {
     }
 
     private func removeDocBlockPrefix(_ rxDocCommentPrefix: RegularExpression, _ str: String) -> String {
-        let docBlock: String = rxDocCommentPrefix.withMatchesReplaced(string: str) { _ in "" }
-        return docBlock
+        rxDocCommentPrefix.withMatchesReplaced(string: str) { _ in "" }
     }
 
     enum DocFixerError: Error {
