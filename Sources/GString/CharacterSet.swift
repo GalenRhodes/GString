@@ -22,4 +22,12 @@ extension CharacterSet {
 
     /// Shorthand for `.whitespacesAndNewlines.union(.controlCharacters)`.
     public static let whitespacesAndNewlinesAndControlCharacters: CharacterSet = .whitespacesAndNewlines.union(.controlCharacters)
+
+    public func satisfies(character ch: Character) -> Bool {
+        ch.unicodeScalars.allSatisfy { contains($0) }
+    }
+
+    public func satisfies(string str: String) -> Bool {
+        str.unicodeScalars.allSatisfy { contains($0) }
+    }
 }

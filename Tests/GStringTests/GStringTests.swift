@@ -18,23 +18,15 @@ class GStringTests: XCTestCase {
         // Put teardown code here. This method is called after the invocation of each test method in the class.
     }
 
-    func testExample() throws {
-        let a = 4
-        let b = 2
-        let m = min(a, b)
+    func testStringWrap() throws {
+        let s = "             Now is the time for all                   good men to come to the                   aid of their country.              ".wrapTo(lineWidth: 25, separator: "\"\n\"")
 
-        print("| \(a) | \(b) | \(max(a, b) - m)")
-
-        let _a = (a - m)
-        let _b = (b - m)
-
-        print("| \(_a) | \(_b) | \(max(_a, _b) - min(_a, _b))")
+        print("[----*----*----*----*----*]")
+        print("\"\(s)\"")
     }
 
-    func testPerformanceExample() throws {
-        // This is an example of a performance test case.
-        self.measure {
-            // Put the code you want to measure the time of here.
-        }
-    }
+//    func testPerformanceExample() throws {
+//        self.measure {
+//        }
+//    }
 }

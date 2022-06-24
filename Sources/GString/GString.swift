@@ -31,6 +31,12 @@ extension String {
     /// Shorthand for `trimmingCharacters(in: .whitespacesAndNewlines.union(.controlCharacters))`.
     public var trimmed:                   String { trimmingCharacters(in: .whitespacesAndNewlinesAndControlCharacters) }
 
+    /// Shorthand for `leftTrimmingCharacters(in: .whitespacesAndNewlines.union(.controlCharacters))`.
+    public var leftTrimmed:               String { leftTrimmingCharacters(in: .whitespacesAndNewlinesAndControlCharacters) }
+
+    /// Shorthand for `rightTrimmingCharacters(in: .whitespacesAndNewlines.union(.controlCharacters))`.
+    public var rightTrimmed:              String { rightTrimmingCharacters(in: .whitespacesAndNewlinesAndControlCharacters) }
+
     /// Shorthand for `startIndex ..< endIndex`.
     public var fullRange:                 StringRange { startIndex ..< endIndex }
 
@@ -46,7 +52,11 @@ extension String {
 
     /// Returns a string with any terminating forward slash (/) removed.
     public var removingLastPathSeparator: String { hasSuffix("/") ? String(self[startIndex ..< index(before: endIndex)]) : self }
+
+    /// Shorthand for `normalizedFilename(inPath: FileManager.default.currentDirectoryPath)`.
     public var normalizedFilename:        String { normalizedFilename(inPath: FileManager.default.currentDirectoryPath) }
+
+    /// Shorthand for `absolutePath(parent: FileManager.default.currentDirectoryPath)`.
     public var absolutePath:              String { absolutePath(parent: FileManager.default.currentDirectoryPath) }
 
     /// Return true if this string is prefixed with any of the given prefixes. This method is the same as calling
@@ -62,48 +72,113 @@ extension String {
         return false
     }
 
+    /// Wraps a string to a given line length with a given initial indent and given subsequent indents. This method assumes a
+    /// monospaced font.
+    ///
+    /// - Parameters:
+    ///   - lineWidth: the maximum width of a line.
+    ///   - firstIndent: The width of the initial indent. (defaults to 0)
+    ///   - indent: The width of subsequent indents. (defaults to 0)
+    ///   - tabs: The width of tab characters. (defaults to 4)
+    ///   - separator: The line separator to use. (defaults to "\n")
+    /// - Returns: The string wrapped to the maximum line width.
+    ///
     public func wrapTo(lineWidth: Int, firstIndent: Int = 0, indent: Int = 0, tabs: Int = 4, separator: String = "\n") -> String {
-        let m = min(firstIndent, indent)
-        guard m == 0 else { return wrapTo(lineWidth: lineWidth, firstIndent: (firstIndent - m), indent: (indent - m), tabs: 4, separator: separator) }
+        let m  = min(firstIndent, indent)
+        let i1 = ((m == 0) ? firstIndent : (firstIndent - m))
+        let i2 = ((m == 0) ? indent : (indent - m))
+        guard lineWidth > max(i1, i2) else { return self }
+        return replacingOccurrences(of: "\t", with: _fill(" ", tabs))._wrapLinesTo(lineWidth, i1, i2, separator)
+    }
 
+    private func _wrapLinesTo(_ lineWidth: Int, _ firstIndent: Int, _ indent: Int, _ separator: String) -> String {
         let rx          = RegularExpression(pattern: #"(\r\n?|\n)"#)!
+        let sIndent     = _fill(" ", firstIndent)
+        var idx         = startIndex
         var out: String = ""
-        var x           = startIndex
 
-        rx.forEachMatch(in: self) { match, _, _ in
-            if let match = match {
-                let str = String._wrapTo(String(self[x ..< match.range.lowerBound]), lineWidth, firstIndent, indent, 4, separator)
-                x = match.range.upperBound
-                out = ((out == "") ? str : "\(out)\(separator)\(str)")
+        rx.forEachMatch(in: self) { m, _, _ in
+            if let match = m {
+                (sIndent + String(self[idx ..< match.range.lowerBound]).trimmed)._wrap(lineWidth, indent, separator, &out)
+                idx = match.range.upperBound
             }
         }
 
-        let str = String._wrapTo(String(self[x...]), lineWidth, firstIndent, indent, tabs, separator)
-        out = ((out == "") ? str : "\(out)\(separator)\(str)")
+        (sIndent + String(self[idx...]).trimmed)._wrap(lineWidth, indent, separator, &out)
         return out
     }
 
-    private static func _wrapTo(_ str: String, _ lineWidth: Int, _ firstIndent: Int, _ indent: Int, _ tabs: Int, _ separator: String) -> String {
-        var out: String = ""
-        var work: String = _fill(" ", firstIndent) + RegularExpression(pattern: "\\t")!.withMatchesReplaced(string: str) { _ in _fill(" ", tabs) }
+    private func _wrap(_ lineWidth: Int, _ indent: Int, _ separator: String, _ out: inout String) {
+        let cs              = CharacterSet.whitespacesAndNewlinesAndControlCharacters
+        let sIndent: String = _fill(" ", indent)
+        var work:    String = self
 
-        while work != "" {
-            if work.count <= lineWidth {
-                out += "\(separator)\(work)"
-                break
+        while !work.isEmpty {
+            var i1 = work._wrapPoint(lineWidth)
+            var i2 = i1
+
+            if i1 >= work.endIndex || cs.satisfies(character: work[i1]) {
+                while i1 > work.startIndex {
+                    formIndex(before: &i1)
+                    guard cs.satisfies(character: work[i1]) else { break }
+                }
+                if i1 < work.endIndex && !cs.satisfies(character: work[i1]) {
+                    formIndex(after: &i1)
+                }
             }
-            var index = work.startIndex
-            for i in (0 ..< lineWidth) {
+
+            while i2 < work.endIndex && cs.satisfies(character: work[i2]) {
+                formIndex(after: &i2)
             }
+
+            let s = String(work[..<i1])
+            out = ((out.isEmpty) ? s : (out + separator + s))
+            work = ((i2 < work.endIndex) ? (sIndent + String(work[i2...])) : "")
+        }
+    }
+
+    private func _wrapPoint(_ length: Int) -> StringIndex {
+        guard startIndex < endIndex else { return endIndex }
+        guard let i1 = index(startIndex, offsetBy: length, limitedBy: index(before: endIndex)) else { return endIndex }
+        let cs = CharacterSet.whitespacesAndNewlinesAndControlCharacters
+        if cs.satisfies(character: self[i1]) { return i1 }
+
+        var i2 = i1
+
+        while i2 > startIndex {
+            formIndex(before: &i2)
+            if cs.satisfies(character: self[i2]) { return i2 }
         }
 
-        return out
+        return i1
     }
 
-    private static func _fill(_ ch: Character, _ count: Int) -> String {
+    private func _fill(_ ch: Character, _ count: Int) -> String {
         var out: String = ""
         for _ in (0 ..< count) { out.append(ch) }
         return out
+    }
+
+    public func leftTrimmingCharacters(in cs: CharacterSet) -> String {
+        var idx = endIndex
+
+        while idx > startIndex {
+            formIndex(before: &idx)
+            guard cs.satisfies(character: self[idx]) else { return String(self[...idx]) }
+        }
+
+        return ""
+    }
+
+    public func rightTrimmingCharacters(in cs: CharacterSet) -> String {
+        var idx = startIndex
+
+        while idx < endIndex {
+            guard cs.satisfies(character: self[idx]) else { return String(self[idx...]) }
+            formIndex(after: &idx)
+        }
+
+        return ""
     }
 
     public func normalizedFilename(inPath: String) -> String { expandingTildeInPath.removingLastPathSeparator.urlAsFilename.absolutePath(parent: inPath) }
