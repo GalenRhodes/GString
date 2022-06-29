@@ -10,10 +10,12 @@
 		1117D40DF0589930409D216B /* GString.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1117D633C30624D0D3177333 /* GString.swift */; };
 		1117D4A09B5C540773323E15 /* RegularExpression.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1117DC908456F53ABFF84DDB /* RegularExpression.swift */; };
 		1117D5D1886FFFE82CFF1412 /* GString.docc in Resources */ = {isa = PBXBuildFile; fileRef = 1117D710C7702A1E77743759 /* GString.docc */; };
+		1117D84805FDD68B33139BCB /* Formatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1117DD2126E5E6C95FC4A0F5 /* Formatter.swift */; };
 		1117D8A258754095A6898920 /* GString.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1117D633C30624D0D3177333 /* GString.swift */; };
 		1117D943A35DBFD270F2C457 /* CharacterSet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1117D2BB0D14538AB54E7D8E /* CharacterSet.swift */; };
 		1117D95575CCA6B962CB6D20 /* GStringTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1117DF839C06D333BC6932E5 /* GStringTests.swift */; };
 		1117DCA6DE0DDBA03C8E0E8D /* GString.h in Headers */ = {isa = PBXBuildFile; fileRef = 1117D37789F4188CBBAC3240 /* GString.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		1117DCE633C0370D5499B308 /* Formatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1117DD2126E5E6C95FC4A0F5 /* Formatter.swift */; };
 		1117DE1F628C725CC9E6B861 /* DFConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1117DDC5FC516137E65BDDB5 /* DFConfig.swift */; };
 		1117DF2D81F9B34FFAB1CF0F /* CharacterSet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1117D2BB0D14538AB54E7D8E /* CharacterSet.swift */; };
 		1117DF84D82E437FBCD91B1B /* RegularExpression.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1117DC908456F53ABFF84DDB /* RegularExpression.swift */; };
@@ -56,6 +58,7 @@
 		1117D7DB0B3C7CE6E4B34ECA /* DocFixerConfig.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = DocFixerConfig.json; sourceTree = "<group>"; };
 		1117DAA8362A2FBDE9C0BCF6 /* jazzy.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = jazzy.sh; sourceTree = "<group>"; };
 		1117DC908456F53ABFF84DDB /* RegularExpression.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RegularExpression.swift; sourceTree = "<group>"; };
+		1117DD2126E5E6C95FC4A0F5 /* Formatter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Formatter.swift; sourceTree = "<group>"; };
 		1117DDC5FC516137E65BDDB5 /* DFConfig.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DFConfig.swift; sourceTree = "<group>"; };
 		1117DED98DC9116CB9FFAFAF /* Package.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Package.swift; sourceTree = "<group>"; };
 		1117DF839C06D333BC6932E5 /* GStringTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GStringTests.swift; sourceTree = "<group>"; };
@@ -141,6 +144,7 @@
 				1117D633C30624D0D3177333 /* GString.swift */,
 				1117DC908456F53ABFF84DDB /* RegularExpression.swift */,
 				1117D2BB0D14538AB54E7D8E /* CharacterSet.swift */,
+				1117DD2126E5E6C95FC4A0F5 /* Formatter.swift */,
 			);
 			path = GString;
 			sourceTree = "<group>";
@@ -325,6 +329,7 @@
 				1117D8A258754095A6898920 /* GString.swift in Sources */,
 				1117DF84D82E437FBCD91B1B /* RegularExpression.swift in Sources */,
 				1117DF2D81F9B34FFAB1CF0F /* CharacterSet.swift in Sources */,
+				1117DCE633C0370D5499B308 /* Formatter.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -345,6 +350,7 @@
 				1117D4A09B5C540773323E15 /* RegularExpression.swift in Sources */,
 				1117D40DF0589930409D216B /* GString.swift in Sources */,
 				1117DE1F628C725CC9E6B861 /* DFConfig.swift in Sources */,
+				1117D84805FDD68B33139BCB /* Formatter.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
