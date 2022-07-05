@@ -20,7 +20,7 @@ import CoreFoundation
 
 extension String {
 
-    public func format(_ parameters: Any...) -> String {
+    public func format(_ parameters: Any?...) -> String {
         var out: String      = ""
         var idx: StringIndex = startIndex
         var arg: Int         = 0
@@ -30,7 +30,77 @@ extension String {
             formIndex(after: &idx)
 
             if ch == "%" {
-                let formatData = FormatData(argumentIndex: &arg, string: self, index: &idx)
+                let formatData   = FormatData(argumentIndex: &arg, string: self, index: &idx)
+                var work: String = ""
+
+                switch formatData.conversionSpecifier {
+                    case .STRING:
+                        work = "\(parameters[formatData.argumentIndex] ?? "nil")"
+                        fmtWidthCase(formatData: formatData, work: &work, out: &out)
+
+                    case .PERCENT:
+                        work = "%"
+
+                    case .BOOL:
+                        let _bool = parameters[formatData.argumentIndex]
+                        if _bool == nil { work = "nil" }
+                        else if let bool = _bool as? Bool { work = bool ? "true" : "false" }
+                        else { fatalError() }
+                        fmtWidthCase(formatData: formatData, work: &work, out: &out)
+
+                    case .HASH:
+                        break
+
+                    case .CHAR:
+                        var c: Character? = parameters[formatData.argumentIndex] as? Character
+
+                        if c == nil {
+                            let str = "\(parameters[formatData.argumentIndex] ?? " ")"
+                            if str.count < 1 { c = " " }
+                            else { c = str[str.startIndex] }
+                        }
+
+                        work.append(c ?? " ")
+                        fmtWidthCase(formatData: formatData, work: &work, out: &out)
+
+                    case .DECIMAL:
+                        if let i = getInteger(parameters[formatData.argumentIndex]) {
+                            let f = NumberFormatter()
+                            f.numberStyle = .decimal
+                            f.minimumFractionDigits = 0
+                            f.maximumFractionDigits = 0
+                            f.minimumIntegerDigits = 1
+                            f.formatWidth = formatData.width
+                            if formatData.groupingSeparators {
+                                f.groupingSize = 3
+                                f.groupingSeparator = ","
+                                f.hasThousandSeparators = true
+                            }
+                        }
+                        else {
+                            work = "nil"
+                        }
+                        fmtWidthCase(formatData: formatData, work: &work, out: &out)
+
+                    case .OCTAL:
+                        break
+
+                    case .HEX:
+                        break
+
+                    case .EXP:
+                        break
+
+                    case .FLOAT:
+                        break
+
+                    case .F_EXP:
+                        break
+
+                    case .TIME:
+                        break
+                }
+                out.append(work)
             }
             else {
                 out.append(ch)
@@ -40,55 +110,65 @@ extension String {
         return out
     }
 
-    enum TimeSpec: Character {
-        case HOUR024       = "H"
-        case HOUR012       = "I"
-        case HOUR24        = "k"
-        case HOUR12        = "l"
-        case MINUTE        = "M"
-        case SECOND        = "S"
-        case MILLIS        = "L"
-        case NANOS         = "N"
-        case AMPM          = "p"
-        case TZ_NUM        = "z"
-        case TZ_NAME       = "Z"
-        case EPOCH_SECONDS = "s"
-        case EPOCH_MILLIS  = "Q"
-        case MONTH_LONG    = "B"
-        case MONTH_SHORT   = "b"
-        case DAY_LONG      = "A"
-        case DAY_SHORT     = "a"
-        case YEAR_LONG     = "Y"
-        case YEAR_SHORT    = "y"
-        case CENTURY       = "C"
-        case DAY_OF_YEAR   = "j"
-        case DATE0         = "d"
-        case DATE          = "e"
-        case R             = "R"
-        case T             = "T"
-        case r             = "r"
-        case D             = "D"
-        case F             = "F"
-        case c             = "c"
+    private func getInteger(_ param: Any?) -> Int? {
+        guard let param = param else { return nil }
+
+        if let i = param as? Int { return i }
+        if let i = param as? Int64 { return Int(truncatingIfNeeded: i) }
+        if let i = param as? Int32 { return Int(i) }
+        if let i = param as? Int16 { return Int(i) }
+        if let i = param as? Int8 { return Int(i) }
+        if let i = param as? UInt { return Int(bitPattern: i) }
+        if let i = param as? UInt64 { return Int(bitPattern: UInt(truncatingIfNeeded: i)) }
+        if let i = param as? UInt32 { return Int(bitPattern: UInt(i)) }
+        if let i = param as? UInt16 { return Int(bitPattern: UInt(i)) }
+        if let i = param as? UInt8 { return Int(bitPattern: UInt(i)) }
+
+        if let d = param as? Double { return Int(d) }
+        if let f = param as? Float { return Int(f) }
+        fatalError()
     }
 
-    enum ConversionSpec: String {
-        case STRING  = "sS"
-        case PERCENT = "%"
-        case BOOL    = "bB"
-        case HASH    = "hH"
-        case CHAR    = "cC"
-        case DECIMAL = "d"
-        case OCTAL   = "o"
-        case HEX     = "xX"
-        case EXP     = "eE"
-        case FLOAT   = "f"
-        case F_EXP   = "gG"
-        case TIME    = "tT"
+    private func getDouble(_ param: Any?) -> Double? {
+        guard let param = param else { return nil }
+
+        if let d = param as? Double { return d }
+        if let f = param as? Float { return Double(f) }
+
+        if let i = param as? Int { return Double(i) }
+        if let i = param as? Int64 { return Double(i) }
+        if let i = param as? Int32 { return Double(i) }
+        if let i = param as? Int16 { return Double(i) }
+        if let i = param as? Int8 { return Double(i) }
+        if let i = param as? UInt { return Double(i) }
+        if let i = param as? UInt64 { return Double(i) }
+        if let i = param as? UInt32 { return Double(i) }
+        if let i = param as? UInt16 { return Double(i) }
+        if let i = param as? UInt8 { return Double(i) }
+        fatalError()
+    }
+
+    private func fmtWidthCase(formatData: FormatData, work: inout String, out: inout String) {
+        if formatData.upperCase { work = work.uppercased() }
+        if formatData.width > work.count {
+            for _ in (work.count ..< formatData.width) {
+                if formatData.leftJustified { out.append(" ") }
+                else { out.insert(" ", at: out.startIndex) }
+            }
+        }
     }
 
     enum FormatParseState {
-        case ArgIndex, Flags, Width, Precision, Conversion, DateTime, Done
+        case Begin, ArgIndex, Flags, Width, Precision, Conversion, Done
+    }
+
+    enum ConversionSpec {
+        case STRING, PERCENT, BOOL, HASH, CHAR, DECIMAL, OCTAL, HEX, EXP, FLOAT, F_EXP, TIME
+    }
+
+    enum TimeSpec {
+        case HOUR024, HOUR012, HOUR24, HOUR12, MINUTE, SECOND, MILLIS, NANOS, AMPM, TZ_NUM, TZ_NAME, EPOCH_SECONDS, EPOCH_MILLIS, MONTH_LONG, MONTH_SHORT, DAY_LONG, DAY_SHORT, YEAR_LONG, YEAR_SHORT,
+             CENTURY, DAY_OF_YEAR, DATE0, DATE, R, T, r, D, F, c
     }
 
     class FormatData {
@@ -100,146 +180,171 @@ extension String {
         var groupingSeparators:  Bool           = false
         var negativeParentheses: Bool           = false
         var upperCase:           Bool           = false
-        var width:               UInt           = 0
-        var precision:           UInt           = 0
+        var width:               Int            = 0
+        var precision:           Int            = 0
         var argumentIndex:       Int            = 0
         var conversionSpecifier: ConversionSpec = .PERCENT
+        var timeSpecifier:       TimeSpec?      = nil
 
         init(argumentIndex: inout Int, string str: String, index idx: inout StringIndex) {
-            self.argumentIndex = argumentIndex
-            argumentIndex += 1
-            var state: FormatParseState = .ArgIndex
-
-            while state != .Done && idx < str.endIndex {
-                var ch = str[idx]
-
-                switch state {
-                    case .ArgIndex:
-                        if ch == "<" {
-                            guard argumentIndex > 0 else { fatalError() }
-                            next(string: str, index: &idx)
-                            self.argumentIndex = argumentIndex - 1
-                        }
-                        else if ch >= "0" && ch <= "9" {
-                            let value = parseNumber(string: str, index: &idx, character: &ch)
-
-                            if ch == "$" {
-                                next(string: str, index: &idx)
-                                self.argumentIndex = value
-                            }
-                            else {
-                                self.argumentIndex = argumentIndex
-                                argumentIndex += 1
-
-                                if value == 0 {
-                                    zeroPadded = true
-                                }
-                                else {
-                                    width = UInt(bitPattern: value)
-                                    state = .Precision
-                                    continue
-                                }
-                            }
-                        }
-                        state = .Flags
-
-                    case .Flags:
-                        repeat {
-                            switch ch {
-                                case "-":
-                                    leftJustified = true
-                                    ch = next(string: str, index: &idx)
-                                case "#":
-                                    alternateForm = true
-                                    ch = next(string: str, index: &idx)
-                                case "+":
-                                    includeSign = true
-                                    ch = next(string: str, index: &idx)
-                                case " ":
-                                    leadingSpace = true
-                                    ch = next(string: str, index: &idx)
-                                case "0":
-                                    zeroPadded = true
-                                    ch = next(string: str, index: &idx)
-                                case ",":
-                                    groupingSeparators = true
-                                    ch = next(string: str, index: &idx)
-                                case "(":
-                                    negativeParentheses = true
-                                    ch = next(string: str, index: &idx)
-                                default:
-                                    state = .Width
-                            }
-                        }
-                        while state == .Flags
-
-                    case .Width:
-                        if ch >= "0" && ch <= "9" {
-                            width = UInt(bitPattern: parseNumber(string: str, index: &idx, character: &ch))
-                        }
-                        state = .Precision
-
-                    case .Precision:
-                        if ch == "." {
-                            ch = next(string: str, index: &idx)
-                            guard ch >= "0" && ch <= "9" else { fatalError() }
-                            precision = UInt(bitPattern: parseNumber(string: str, index: &idx, character: &ch))
-                        }
-                        state = .Conversion
-
-                    case .Conversion:
-                        upperCase = ch.isUppercase
-                        switch ch {
-                            case "t", "T":
-                                conversionSpecifier = .TIME
-                                state = .DateTime
-                                next(string: str, index: &idx)
-                                continue
-                            case "s", "S": conversionSpecifier = .STRING
-                            case "b", "B": conversionSpecifier = .BOOL
-                            case "h", "H": conversionSpecifier = .HASH
-                            case "c", "C": conversionSpecifier = .CHAR
-                            case "x", "X": conversionSpecifier = .HEX
-                            case "e", "E": conversionSpecifier = .EXP
-                            case "g", "G": conversionSpecifier = .F_EXP
-                            case "%":      conversionSpecifier = .PERCENT
-                            case "d":      conversionSpecifier = .DECIMAL
-                            case "o":      conversionSpecifier = .OCTAL
-                            case "f":      conversionSpecifier = .FLOAT
-                            default: fatalError()
-                        }
-                        str.formIndex(after: &idx)
-                        state = .Done
-
-                    case .DateTime:
-                        <#code#>
-
-                    case .Done:
-                        break
-                }
-            }
-        }
-
-        @discardableResult private func next(string str: String, index idx: inout StringIndex) -> Character {
-            str.formIndex(after: &idx)
             guard idx < str.endIndex else { fatalError() }
-            return str[idx]
+
+            if str[idx] == "%" {
+                conversionSpecifier = .PERCENT
+                str.formIndex(after: &idx)
+            }
+            else {
+                var state: FormatParseState = .ArgIndex
+                var prev:  FormatParseState = .Begin
+
+                repeat {
+                    switch state {
+                        case .Begin:      (prev, state) = (.Begin, .ArgIndex)
+                        case .ArgIndex:   (prev, state) = parseArgIndex(string: str, index: &idx, argumentIndex: &argumentIndex)
+                        case .Flags:      (prev, state) = parseFlags(string: str, index: &idx)
+                        case .Width:      (prev, state) = parseWidth(string: str, index: &idx, prevState: prev)
+                        case .Precision:  (prev, state) = parsePrecision(string: str, index: &idx, prevState: prev)
+                        case .Conversion: (prev, state) = parseConversion(string: str, index: &idx)
+                        case .Done:       break
+                    }
+                }
+                while state != .Done
+            }
         }
 
-        private func parseNumber(string str: String, index idx: inout StringIndex, character ch: inout Character) -> Int {
-            var value = 0
-            let zero  = toAscii(char: "0")
-
-            while ch >= "0" && ch <= "9" {
-                value = ((value * 10) + (toAscii(char: ch) - zero))
-                ch = next(string: str, index: &idx)
+        private func parseArgIndex(string str: String, index idx: inout StringIndex, argumentIndex argIdx: inout Int) -> (FormatParseState, FormatParseState) {
+            switch str[idx] {
+                case "<":
+                    guard argIdx > 0 else { fatalError() }
+                    argumentIndex = argIdx - 1
+                    next(string: str, index: &idx)
+                case "0":
+                    break
+                case "1" ... "9":
+                    let value = parseNumber(string: str, index: &idx)!
+                    if str[idx] == "$" {
+                        argumentIndex = value
+                        next(string: str, index: &idx)
+                    }
+                    else {
+                        width = value
+                        return (.Width, .Precision)
+                    }
+                default:
+                    argumentIndex = argIdx
+                    argIdx += 1
             }
+            return (.ArgIndex, .Flags)
+        }
 
+        private func parseFlags(string str: String, index idx: inout StringIndex) -> (FormatParseState, FormatParseState) {
+            repeat {
+                switch str[idx] {
+                    case "-": leftJustified = true
+                    case "#": alternateForm = true
+                    case "+": includeSign = true
+                    case " ": leadingSpace = true
+                    case "0": zeroPadded = true
+                    case ",": groupingSeparators = true
+                    case "(": negativeParentheses = true
+                    default:  return (.Flags, .Width)
+                }
+                next(string: str, index: &idx)
+            }
+            while true
+        }
+
+        private func parseWidth(string str: String, index idx: inout StringIndex, prevState prev: FormatParseState) -> (FormatParseState, FormatParseState) {
+            if let value = parseNumber(string: str, index: &idx) {
+                width = value
+                return (.Width, .Precision)
+            }
+            return (prev, .Conversion)
+        }
+
+        private func parsePrecision(string str: String, index idx: inout StringIndex, prevState prev: FormatParseState) -> (FormatParseState, FormatParseState) {
+            if str[idx] == "." {
+                next(string: str, index: &idx)
+                guard let value = parseNumber(string: str, index: &idx) else { fatalError() }
+                precision = value
+                return (.Precision, .Conversion)
+            }
+            return (prev, .Conversion)
+        }
+
+        private func parseConversion(string str: String, index idx: inout StringIndex) -> (FormatParseState, FormatParseState) {
+            let ch = str[idx]
+            upperCase = ch.isUppercase
+            switch ch {
+                case "t", "T": parseTimeSpec(string: str, index: &idx)
+                case "s", "S": conversionSpecifier = .STRING
+                case "b", "B": conversionSpecifier = .BOOL
+                case "h", "H": conversionSpecifier = .HASH
+                case "c", "C": conversionSpecifier = .CHAR
+                case "x", "X": conversionSpecifier = .HEX
+                case "e", "E": conversionSpecifier = .EXP
+                case "g", "G": conversionSpecifier = .F_EXP
+                case "%":      conversionSpecifier = .PERCENT
+                case "d":      conversionSpecifier = .DECIMAL
+                case "o":      conversionSpecifier = .OCTAL
+                case "f":      conversionSpecifier = .FLOAT
+                default: fatalError()
+            }
+            str.formIndex(after: &idx)
+            return (.Conversion, .Done)
+        }
+
+        private func parseTimeSpec(string str: String, index idx: inout StringIndex) {
+            conversionSpecifier = .TIME
+            next(string: str, index: &idx)
+            switch str[idx] {
+                case "H": timeSpecifier = .HOUR024
+                case "I": timeSpecifier = .HOUR012
+                case "k": timeSpecifier = .HOUR24
+                case "l": timeSpecifier = .HOUR12
+                case "M": timeSpecifier = .MINUTE
+                case "S": timeSpecifier = .SECOND
+                case "L": timeSpecifier = .MILLIS
+                case "N": timeSpecifier = .NANOS
+                case "p": timeSpecifier = .AMPM
+                case "z": timeSpecifier = .TZ_NUM
+                case "Z": timeSpecifier = .TZ_NAME
+                case "s": timeSpecifier = .EPOCH_SECONDS
+                case "Q": timeSpecifier = .EPOCH_MILLIS
+                case "B": timeSpecifier = .MONTH_LONG
+                case "b": timeSpecifier = .MONTH_SHORT
+                case "A": timeSpecifier = .DAY_LONG
+                case "a": timeSpecifier = .DAY_SHORT
+                case "Y": timeSpecifier = .YEAR_LONG
+                case "y": timeSpecifier = .YEAR_SHORT
+                case "C": timeSpecifier = .CENTURY
+                case "j": timeSpecifier = .DAY_OF_YEAR
+                case "d": timeSpecifier = .DATE0
+                case "e": timeSpecifier = .DATE
+                case "R": timeSpecifier = .R
+                case "T": timeSpecifier = .T
+                case "r": timeSpecifier = .r
+                case "D": timeSpecifier = .D
+                case "F": timeSpecifier = .F
+                case "c": timeSpecifier = .c
+                default: fatalError()
+            }
+        }
+
+        private func parseNumber(string str: String, index idx: inout StringIndex) -> Int? {
+            var value: Int? = nil
+            while let asc = str[idx].asciiValue, asc >= 48 && asc <= 57 {
+                value = (((value ?? 0) * 10) + (Int(asc) - 48))
+                next(string: str, index: &idx)
+            }
             return value
         }
 
-        private func toAscii(char ch: Character) -> Int {
-            Int(bitPattern: UInt(ch.asciiValue!))
+        private func next(string str: String, index idx: inout StringIndex) {
+            guard idx < str.endIndex else { fatalError() }
+            str.formIndex(after: &idx)
+            guard idx < str.endIndex else { fatalError() }
         }
     }
 }
+

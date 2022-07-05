@@ -67,15 +67,18 @@ class DocFixer {
 
                                 for p in paras {
                                     if p.trimmed.hasAnyPrefix("|", "```") {
-                                        out = ((out == "") ? p : (out + "\n\(p)"))
+                                        out = ((out == "") ? p : ("\(out)\n\(p)"))
                                     }
                                     else {
-                                        out = ((out == "") ? p.wrapTo(lineWidth: config.lineWidth, tabs: 4) : ("\(out)\n\(p.wrapTo(lineWidth: config.lineWidth, tabs: 4))"))
+                                        let _p = p.wrapTo(lineWidth: config.lineWidth, tabs: 4)
+                                        out = ((out == "") ? _p : ("\(out)\n\(_p)"))
                                     }
                                 }
 
                                 return out
                             }
+
+                            print(output)
                         }
                         else {
                             print("   ERROR: Could not read file - \"(\(swiftFilename)\"")
